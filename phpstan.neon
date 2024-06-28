@@ -1,0 +1,17 @@
+includes:
+    - %currentWorkingDirectory%/vendor/craftcms/phpstan/phpstan.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+    ignoreErrors:
+    -   '#Access to property \$[a-zA-Z0-9\\_]+ on an unknown class craft\\commerce\\elements\\Product.#'
+    -   '#Access to property \$[a-zA-Z0-9\\_]+ on an unknown class craft\\digitalproducts\\elements\\Product.#'
+    -   '#Call to method [\(\)a-zA-Z0-9\\_]+ on an unknown class craft\\commerce\\elements\\Product.#'
+    -   '#Call to method [\(\)a-zA-Z0-9\\_]+ on an unknown class craft\\digitalproducts\\elements\\Product.#'
+    -   '#Instantiated class craft\\commerce\\elements\\Product not found.#'
+    -   '#Instantiated class craft\\digitalproducts\\elements\\Product not found.#'
+    -   '#Call to static method getInstance\(\) on an unknown class craft\\commerce\\Plugin.#'
+    -   '#Call to static method getInstance\(\) on an unknown class craft\\digitalproducts\\Plugin.#'
+    reportUnmatchedIgnoredErrors: false

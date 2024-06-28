@@ -1,0 +1,181 @@
+{% extends 'asset-indexes-extra/_layouts/index.twig' %}
+
+{% if optionId is defined %}
+    {% set title = 'Asset Index Logs - option #{optionId}'|t('asset-indexes-extra', params = {
+        optionId: optionId,
+    }) %}
+    {% set log = craft.assetIndexesExtra.logs.getOneLog(optionId) %}
+{% else %}
+    {% set title = 'Asset Index Logs'|t('asset-indexes-extra') %}
+    {% set log = craft.assetIndexesExtra.logs.getOneLog() %}
+{% endif %}
+
+{% set crumbs = [] %}
+
+{% set selectedSubnavItem = 'logs' %}
+
+{% block actionButton %}
+	{% if log and currentUser.can('assetIndexesExtra-deleteLogs') %}
+		<a href="#" id="deleteLogs" class="btn delete remove icon">{{ 'Delete Indexed Logs (Search Filters Ignored)'|t('asset-indexes-extra') }}</a>
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+	<div id="log-vue-admin-table"></div>
+{% endblock %}
+
+{% js %}
+
+window.csrfTokenName = "{{ craft.app.config.general.csrfTokenName|e('js') }}";
+window.csrfTokenValue = "{{ craft.app.request.csrfToken|e('js') }}";
+
+new Craft.VueAdminTable({
+    columns: [
+            { name: '__slot:title', title: Craft.t('app', 'Id'), sortField: 'id' },
+            { name: 'itemType', title: Craft.t('app', 'Item Type'), sortField: 'itemType' },
+            { name: 'filename', title: Craft.t('app', 'Filename'), sortField: 'filename' },
+            { name: 'volume', title: Craft.t('app', 'Indexed volume'), sortField: 'volumeId' },
+            { name: 'user', title: Craft.t('app', 'User'), sortField: 'username'},
+            { name: 'cli', title: Craft.t('app', 'CLI'), sortField: 'cli'},
+            { name: '__slot:detail', title: Craft.t('app', 'Result'), sortField: 'statusCode'},
+            { name: 'dateCreated', title: Craft.t('app', 'Created') },
+        ],
+        container: '#log-vue-admin-table',
+        emptyMessage: Craft.t('asset-indexes-extra', 'No logs exist.'),
+        tableDataEndpoint: 'asset-indexes-extra/logs/endpoint',
+        search: true,
+        onQueryParams: function(params) {
+            var optionId = {{ optionId ?? 'null' }};
+            if (optionId) {
+                params.optionId = optionId;
+            }
+            return params;
+        },
+    });
+
+    $(document).on('click', '#deleteLogs', function() {
+
+        if (!confirm('Are you sure you want to perform this action?')) {
+            return false;
+        }
+        var data = {};
+        data[csrfTokenName] = csrfTokenValue;
+        var optionId = {{ optionId ?? 'null' }};
+        if (optionId) {
+            data['optionId'] = optionId;
+        }
+        $.ajax({
+            method: "POST",
+            url: Craft.getUrl("asset-indexes-extra/logs/delete" + "?t=" + new Date().getTime()),
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                location.reload();
+	        }
+	    });
+	});
+
+    $(document).on('click', '.detail-cursor-pointer', function() {
+        // Find the closest tr to the clicked td
+        var recordTr = $(this).closest('tr');
+        // Find the next tr
+        var nextTr = recordTr.next('tr');
+
+        nextTr.find('td div div').append('<span style="display:none" class="logOptions">More Info</span><pre class="jsonDisplay" style="display:none"></pre>');
+        
+        var logOptions = nextTr.find('td .record').data('log-options');
+        logOptions = JSON.stringify(logOptions, null, 2);
+        // if there is no log option or user can not see it
+        if (logOptions != '[]' && logOptions != '""') {
+            nextTr.find('.logOptions').eq(0).toggle();
+        }
+        nextTr.find('.record .jsonDisplay').eq(0).html(syntaxHighlight(logOptions));
+        nextTr.find('.logOptions').eq(0).on('click', function(event) {
+            $(this).next("pre.jsonDisplay").toggle();
+        });
+
+        var data = {
+            'assetId': nextTr.find('td .record').data('asset-id'),
+            'itemId': nextTr.find('td .record').data('item-id'),
+            'item-type': nextTr.find('td .record').data('item-type')
+        };
+        $.ajax({
+            method: "GET",
+            url: Craft.getUrl("asset-indexes-extra/logs/element-chip" + "?t=" + new Date().getTime()),
+            data: data,
+            dataType: 'html',
+            success: function (data) {
+                nextTr.find('.record .loading').html('');
+                if (data) {
+                    nextTr.find('td div div div').prepend(data);
+                    var elementChips = nextTr.find('.chip');
+                    elementChips.each(function() {
+                        $(this).on('click', function(event) {
+                            event.preventDefault();
+                            var elementId = $(this).data('id');
+                            var elementType = $(this).data('type');
+                            Craft.createElementEditor(elementType, {
+                                elementId: elementId,
+                                siteId: $(this).data('site-id')
+                            });
+                        });
+                    });
+                }
+	        }
+	    });
+	});
+
+    function syntaxHighlight(json) {
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            let cls = 'number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key';
+                } else {
+                    cls = 'string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null/.test(match)) {
+                cls = 'null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+{% endjs %}
+
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
+
+{% css %}
+	#log-vue-admin-table .chip[data-type="craft\\elements\\Asset"]{
+	    top: 10px;
+	}
+    .string { color: green; }
+    .number { color: darkorange; }
+    .boolean { color: blue; }
+    .null { color: magenta; }
+    .key { color: red; }
+
+    .logOptions {
+        display: inline-block;
+        padding: 2px 4px;
+        font-size: 10px;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+
+    .logOptions:hover {
+        background-color: #0056b3;
+    }
+
+    .jsonDisplay {
+        font-size: 12px !important;
+    }
+{% endcss %}

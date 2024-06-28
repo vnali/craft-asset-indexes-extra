@@ -1,0 +1,9 @@
+{% if currentUser.can('assetIndexesExtra-viewAssignedOptions') %}
+    {% redirect 'asset-indexes-extra/asset-indexes/index' %}
+{% elseif currentUser.can('assetIndexesExtra-viewLogs') %}
+    {% redirect 'asset-indexes-extra/logs/index' %}
+{% elseif currentUser.can('assetIndexesExtra-manageSettings') %}
+    {% redirect 'asset-indexes-extra/settings' %}
+{% else %}
+    {% redirect 'dashboard' %}
+{% endif %}

@@ -1,0 +1,38 @@
+{% extends 'asset-indexes-extra/_layouts/index.twig' %}
+
+{% set title = 'General Settings'|t('asset-indexes-extra') %}
+
+{% set crumbs = [] %}
+
+{% set selectedSubnavItem = 'settings' %}
+
+{% block content %}
+    {% import "_includes/forms" as forms %}
+	<form action="" method="post" accept-charset="UTF-8" data-saveshortcut>
+		{{ redirectInput('asset-indexes-extra/settings/general') }}
+		{{ csrfInput() }}
+        {{ forms.selectField({
+            label: 'Only list the volumes that the user has related permission.'|t('asset-indexes-extra'),
+            id: 'checkAccessToVolumes',
+            name: 'checkAccessToVolumes',
+            required: false,
+            options: checkAccessToVolumesOptions,
+            value: settings.checkAccessToVolumes ?? null,
+            errors: settings.getErrors('checkAccessToVolumes'),   
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: 'Create a Log record when an asset created.'|t('asset-indexes-extra'),
+            id: 'log',
+            name: 'log',
+            required: false,
+            errors: settings.getErrors('log'),
+            value: 1,
+            on: settings.log is defined ? settings.log
+        }) }}
+		<p>
+			<input type="hidden" name="action" value="asset-indexes-extra/settings/general-save">
+			<input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+		</p>
+	</form>
+{% endblock %}

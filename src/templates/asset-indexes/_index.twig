@@ -1,0 +1,72 @@
+{% extends 'asset-indexes-extra/_layouts/index.twig' %}
+
+{% set title = 'Asset Index Options'|t('asset-indexes-extra') %}
+{% set crumbs = [] %}
+
+{% set selectedSubnavItem = 'options' %}
+{% set fullPageForm = false %}
+
+{% do view.registerTranslations('asset-indexes-extra', [
+    'Are you sure you want to delete “{name}”? This action cannot be undone.',
+    'No asset indexes options exist.',
+]) %}
+
+{% block actionButton %}
+	{% if currentUser.can('assetIndexesExtra-manageOptions') %}
+        <a href="{{ url('asset-indexes-extra/asset-indexes/new') }}" class="btn submit add icon">{{ 'New asset indexes option'|t('asset-indexes-extra') }}</a>
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div id="asset-indexes-vue-admin-table"></div>
+{% endblock %}
+
+{% set assetIndexes = craft.assetIndexesExtra.assetIndexes.getAllAssetIndexOptions() %}
+
+{% set tableData = [] %}
+{% set reorderUrl = 'asset-indexes-extra/asset-indexes/reorder-options' %}
+{% for assetIndex in assetIndexes %}
+    {% set settings = assetIndex.settings %}
+    {% set tableData = tableData|merge([{
+        id: assetIndex.id,
+        title: '#' ~ assetIndex.id,
+        volume: settings.volumes|join(', '),
+        itemType: settings.itemType,
+        description: settings.description,
+        sites: settings.sites|join(', '),
+        status: settings.enable,
+        log: settings.log,
+        hasLog: [currentUser.can('assetIndexesExtra-viewLogs') and craft.assetIndexesExtra.logs.getOneLog(assetIndex.id) ? assetIndex.id : null, url('asset-indexes-extra/logs/index?optionId=' ~ assetIndex.id)],
+        url: currentUser.can('assetIndexesExtra-manageOptions') ? url('asset-indexes-extra/asset-indexes/' ~ assetIndex.id) : '',
+    }]) %}
+{% endfor %}
+
+{% js %}
+    new Craft.VueAdminTable({
+        columns: [
+            { name: '__slot:title', title: Craft.t('app', 'Id') },
+            { name: 'volume', title: Craft.t('app', 'Volume') },
+            { name: 'itemType', title: Craft.t('asset-indexes-extra', 'Item Type') },
+            { name: 'description', title: Craft.t('asset-indexes-extra', 'Description') },
+            { name: 'sites', title: Craft.t('asset-indexes-extra', 'Sites') },
+            { name: 'log', title: Craft.t('asset-indexes-extra', 'Log') },
+            { name: 'hasLog', title: Craft.t('asset-indexes-extra', 'View Logs'), callback: function(value) {
+                if (value[0] != null ) {
+                    return '<a href="' + value[1] + '">View<a/>';
+                } else {
+                    return '';
+                }
+            }},
+        ],
+        container: '#asset-indexes-vue-admin-table',
+        deleteAction: "{{ currentUser.can('assetIndexesExtra-manageOptions') ? 'asset-indexes-extra/asset-indexes/delete' : '' }}",
+        deleteConfirmationMessage: Craft.t('asset-indexes-extra', 'Are you sure you want to delete “{name}”? This action cannot be undone.'),
+        emptyMessage: Craft.t('asset-indexes-extra', 'No asset index options exist.'),
+        tableData: {{ tableData|json_encode|raw }},
+        reorderAction: "{{ currentUser.can('assetIndexesExtra-manageOptions') and assetIndexes|length ? reorderUrl : '' }}",
+        search: true,
+        searchParams: ['itemType', 'volume'],
+    });
+{% endjs %}
+
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}

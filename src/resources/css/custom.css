@@ -1,0 +1,15 @@
+.asset-indexes-extra-info {
+    position: relative;
+    background-color: #e3f8ff;
+    border-left: 6px solid #0b69a3;
+    color: #0b69a3;
+    padding: 10px;
+}
+
+.asset-indexes-extra-warning {
+    position: relative;
+    background-color: #fffbea;
+    border-left: 6px solid #b44d12;
+    color: #b44d12;
+    padding: 10px;
+}

@@ -1,0 +1,50 @@
+{
+  "name": "vnali/craft-asset-indexes-extra",
+  "description": "Generate entries, products from assets and more",
+  "type": "craft-plugin",
+  "version": "2.0.0-alpha.1",
+  "license": "proprietary",
+  "keywords": ["bulk-import"],
+  "support": {
+    "email": "vnali.dev@gmail.com",
+    "issues": "https://github.com/vnali/craft-asset-indexes-extra/issues?state=open",
+    "source": "https://github.com/vnali/craft-asset-indexes-extra",
+    "docs": "https://github.com/vnali/craft-asset-indexes-extra-docs",
+    "rss": "https://github.com/vnali/craft-asset-indexes-extra/releases.atom"
+  },
+  "require": {
+    "php": ">=8.2",
+    "craftcms/cms": "^5.0.0"
+  },
+  "require-dev": {
+    "craftcms/ecs": "dev-main",
+    "craftcms/phpstan": "dev-main"
+  },
+  "autoload": {
+    "psr-4": {
+      "vnali\\assetindexesextra\\": "src/"
+    }
+  },
+  "extra": {
+    "handle": "asset-indexes-extra",
+    "name": "Asset Indexes Extra",
+    "developer": "vnali",
+    "class": "vnali\\assetindexesextra\\AssetIndexesExtra",
+    "documentationUrl": "https://github.com/vnali/craft-asset-indexes-extra-docs"
+  },
+  "scripts": {
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --ansi --fix",
+    "phpstan": "phpstan --memory-limit=1G"
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.2"
+    },
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
+  }
+}

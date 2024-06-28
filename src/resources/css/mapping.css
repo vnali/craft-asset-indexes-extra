@@ -1,0 +1,9 @@
+.triangle {
+    border-right: 2px solid; 
+    border-bottom: 2px solid;
+    height: 5px;
+    width: 5px;
+    margin-right: 3px; 
+    transform: rotate(-45deg);
+    display: inline-block;
+}

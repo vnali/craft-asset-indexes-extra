@@ -1,0 +1,304 @@
+{% extends 'asset-indexes-extra/_layouts/index.twig' %}
+
+{% set title = (recordId ? ('Option #' ~ recordId)  : ' New option ') ~ ' for Asset Indexes utility' %}
+
+{% set crumbs = [] %}
+
+{% block content %}
+
+	{% if options.dateUpdated %}
+		{% set user = craft.users().id(options.userId).one() %}
+		<div class="asset-indexes-extra-info">
+			<span class="info"></span>
+			{{ 'Last updated'|t('asset-indexes-extra') }}
+			{{ options.dateUpdated|date('Y-m-d H:i') }}
+			{{ 'By'|t('asset-indexes-extra') }}
+			{{ user.name }}
+		</div>
+	{% endif %}
+
+	{% import "_includes/forms" as forms %}
+
+	<form action="" method="post" accept-charset="UTF-8" data-saveshortcut>
+		{{ redirectInput('asset-indexes-extra/asset-indexes/index') }}
+		{{ csrfInput() }}
+
+		{{ hiddenInput('recordId', recordId) }}
+
+		<input type="hidden" name="action" value="asset-indexes-extra/asset-indexes/save">
+
+		{{ forms.multiSelectField({
+            label: 'Volumes'|t('asset-indexes-extra'),
+            id: 'volumes',
+            name: 'volumes',
+            options: volumes,
+            values: settings.volumes ?? null,
+            required: false,
+            errors: settings.getErrors('volumes'),
+            required: true
+        }) }}
+
+		{{ forms.selectField({
+            label: 'Item Type'|t('asset-indexes-extra'),
+            id: 'itemType',
+            name: 'itemType',
+            options: itemTypes,
+            value: settings.itemType ?? null,
+            errors: settings.getErrors('itemType'),
+            required: true,
+            disabled: (recordId and craft.assetIndexesExtra.logs.getOneLog(recordId)) ? true : false 
+        }) }}
+
+		<div id="subentry" style="display:none" class="field">
+			{{ forms.selectField({
+                label: 'Section'|t('app'),
+                id: 'section',
+                name: 'sectionId',
+                options: sections,
+                value: settings.sectionId ?? null,
+                errors: settings.getErrors('sectionId'),
+                required: true,
+            }) }}
+
+			{{ forms.selectField({
+                label: 'Entry Type'|t('app'),
+                id: 'entryType',
+                name: 'entryTypeId',
+                options: entryTypes,
+                value: settings.entryTypeId ?? null,
+                class: 'triggerContainer',
+                errors: settings.getErrors('entryTypeId'),
+                required: true,
+            }) }}
+
+		</div>
+
+		{% if productTypes is defined %}
+			<div id="subproduct" style="display:none" class="field">
+				{{ forms.selectField({
+                label: 'Product type'|t('app'),
+                id: 'productType',
+                name: 'productTypeId',
+                options: productTypes,
+                value: settings.productTypeId ?? null,
+                class: 'triggerContainer',
+                errors: settings.getErrors('productTypeId'),
+                required: true,
+            }) }}
+			</div>
+		{% endif %}
+
+		{% if digitalProductTypes is defined %}
+			<div id="subdigitalproduct" style="display:none" class="field">
+				{{ forms.selectField({
+                label: 'Digital product type'|t('app'),
+                id: 'digitalProductType',
+                name: 'digitalProductTypeId',
+                options: digitalProductTypes,
+                value: settings.digitalProductTypeId ?? null,
+                class: 'triggerContainer',
+                errors: settings.getErrors('digitalProductTypeId'),
+                required: true,     
+            }) }}
+
+			{{ forms.selectField({
+                label: 'Tax Category'|t('app'),
+                id: 'taxCategory',
+                name: 'taxCategoryId',
+                options: craft.commerce.taxCategories.getAllTaxCategoriesAsList(),
+                value: settings.taxCategoryId ?? null,
+                errors: settings.getErrors('taxCategoryId'),
+                required: true,        
+            }) }}
+			</div>
+		{% endif %}
+
+        <div id="sites">
+            {% if craft.app.getIsMultiSite %}
+                {{ forms.multiSelectField({
+                    label: 'Sites'|t('app'),
+                    id: 'siteIds',
+                    name: 'siteIds',
+                    options: sites,
+                    values: settings.siteIds ?? null,
+                    errors: settings.getErrors('siteIds'),
+                    required: true,
+                    tip: '',
+                    instructions: 'Specify sites',
+                }) }}
+            {% else %}
+                <div>
+                    <b>{{ 'Site'|t('app') }}</b>
+                </div>
+                {{ sites[0]['label']|t('site') }}
+                {{ hiddenInput('siteIds', sites[0]['value']) }}
+            {% endif %}
+        </div>
+
+		<div id="item-mapping" style="display:none" class="field">
+			{% include "/asset-indexes-extra/asset-indexes/_mapping" %}
+		</div>
+
+		{% if (craft.app.edition.name != 'Solo') and currentUser.can('editUsers') %}
+			{{ forms.elementSelectField({
+                label: 'Select users'|t('asset-indexes-extra'),
+                id: 'userIds',
+                name: 'userIds',
+                elementType: 'craft\\elements\\User',
+                elements: settings.userIds ?? null,
+                errors: settings.getErrors('userIds'),
+                tip: 'If none selected, all users that have access to asset indexes utility have access to this option too.',
+            }) }}
+		{% endif %}
+
+		{{ forms.lightswitchField({
+            label: 'Log'|t('asset-indexes-extra'),
+            tip: 'To Create or update a log record when an item is created based on this option'|t('asset-indexes-extra'),
+            id: 'log',
+            name: 'log',
+            required: false,
+            errors: settings.getErrors('log'),
+            value: 1,
+            on: settings.log is defined ? settings.log, 
+        }) }}
+
+		{{ forms.lightswitchField({
+            label: 'Enable'|t('app'),
+            tip: 'To disable this option temporarily'|t('asset-indexes-extra'),
+            id: 'enable',
+            name: 'enable',
+            required: false,
+            errors: settings.getErrors('enable'),
+            value: 1,
+            on: enable is defined ? enable
+        }) }}
+
+		<input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+
+	</form>
+
+	<input id="sectionWithSiteIds" style="display:none" type="hidden" value="{{sectionWithSiteIds}}">
+    <input id="customSectionsIds" style="display:none" type="hidden" value="{{customSectionsIds}}">
+    <input id="propagationMethods" style="display:none" type="hidden" value="{{propagationMethods}}">
+    <input id="encodedSites" style="display:none" type="hidden" value="{{encodedSites}}">
+{% endblock %}
+
+{% js %}
+$('#volumes, #siteIds').selectize({
+    plugins: ['remove_button'],
+    dropdownParent: 'body',
+});
+
+function sites() {
+    if ($("#itemType").val() == '' || ($("#itemType").val() == 'Entry' && $("#section").val() == '')) {
+        $('#sites').css('display', 'none');
+        return;
+    }
+    $('#sites').css('display', 'block');
+    /*
+    var sectionWithSiteIds = JSON.parse($('#sectionWithSiteIds').val());
+    var supportSites = sectionWithSiteIds.find(element => element == $("#section").val());
+    if (supportSites) {
+        $('#sites').css('display', 'block');
+    } else {
+        $('#sites').css('display', 'none');
+    }
+    */
+    var customSectionsIds = JSON.parse($('#customSectionsIds').val());
+    var supportMultipleSites = customSectionsIds.find(element => element == $("#section").val());
+    var selectize = $('#siteIds').get(0).selectize;
+    if (!supportMultipleSites) {
+        selectize.setMaxItems(1);
+    } else {
+        selectize.setMaxItems(0);  
+    }
+}
+
+function siteInstruction() {
+    var propagationMethods = JSON.parse($('#propagationMethods').val());
+    if ($("#itemType").val() == 'Entry') {
+        var sectionId = $("#section").val();
+        if (propagationMethods[sectionId]) {
+            instructions = propagationMethods[sectionId];
+        } else {
+            instructions = '';
+        }
+    } else {
+         instructions = propagationMethods['others'];
+    }
+    $("#siteIds-instructions p").text(instructions);
+}
+
+if ($('#siteIds').length > 0) {
+    var selectize = $('#siteIds').get(0).selectize;
+    sites();
+    siteInstruction();
+
+    $("#itemType").change(function() {
+        selectize.clear();
+        selectize.clearOptions();
+        if ($("#itemType").val() == '') {
+            $("#section").val('');
+            $('#sites').css('display', 'none');
+        } else if ($("#itemType").val() != 'Entry') {
+            $("#section").val('');
+            $('#sites').css('display', 'block');
+            var encodedSites = JSON.parse($('#encodedSites').val());
+            $.each(encodedSites, function (i, item) {
+                selectize.addOption({
+                    value: item.value,
+                    text: item.label
+                });
+            });
+            selectize.setMaxItems(1);
+            siteInstruction();
+        } else {
+            sites();
+            siteInstruction();
+        }
+    });
+}
+
+$("#section").change(function() {
+    if (this.value) {
+        sectionId = this.value;
+    } else {
+        sectionId = 0;
+    }
+
+    if ($('#siteIds').length > 0) {
+        sites();
+        siteInstruction();
+    }
+
+    var data = {
+        'sectionId' : sectionId
+    }
+    $.ajax({
+        method: "GET",
+        url: Craft.getUrl("asset-indexes-extra/default/get-section-options" + "?t=" + new Date().getTime()),
+        data: data,
+        dataType: 'json',
+        success: function (data) {
+            if ($('#siteIds').length > 0) {
+                selectize.clear();
+                selectize.clearOptions();
+                $.each(data.sites, function (i, item) {
+                    selectize.addOption({
+                        value: item.value,
+                        text: item.label
+                    });
+                });
+            }
+            $('#entryType').empty();
+            $.each(data.entryType, function (i, item) {
+                $('#entryType').append($('<option>', { 
+                    value: item.value,
+                    text : item.label
+		        }));
+		    });
+		}
+	});
+});
+{% endjs %}
+{% do view.registerAssetBundle("vnali\\assetindexesextra\\assets\\AssetIndexesExtraCssAsset") %}

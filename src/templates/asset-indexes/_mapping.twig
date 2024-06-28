@@ -1,0 +1,75 @@
+{% import "_includes/forms" as forms %}
+
+{% set fieldRows = [] %}
+{% set fieldErrors = [] %}
+
+{% for itemSetting in mapping %}
+	{% set lightswitchAttributes = {
+            class: [
+                'lightswitchConvert',
+                'lightswitchConvert'~loop.index
+            ]|filter,
+    } %}
+
+	{% set mappingValue = mappingValues[itemSetting.handle] ?? null %}
+
+	{% set fieldRows = fieldRows|merge({
+        (itemSetting.handle): {
+            heading: itemSetting.label|t('site'),
+            convertTo: include('_includes/forms/select', {
+                name: 'itemFields['~itemSetting.handle~'][convertTo]',
+                options: itemSetting.convertTo,
+                id: 'convertTo'~loop.index,
+                class: 'convertTo',
+                value: mappingValue ? mappingValue.type,
+            }),
+            container: include('asset-indexes-extra/settings/_container', {
+                uniqueId: 'item'~loop.index,
+                handle: itemSetting.handle,
+                item: 'itemType',
+                defaultValue: mappingValue ? mappingValue.container,
+                fieldNameSpace: 'itemFields',
+                containers: defaultContainers
+            }),
+            field: include('asset-indexes-extra/settings/_field', {
+                handle: itemSetting.handle,
+                uniqueId: 'item'~loop.index,
+                defaultValue: mappingValue ? mappingValue.field,
+                fieldNameSpace: 'itemFields',
+            }),
+        }|filter
+    }) %}
+{% endfor %}
+
+{{ forms.editableTableField({
+    label: 'Field Mapping'|t('asset-indexes-extra'),
+    id: 'fields',
+    name: 'fields',
+    cols: {
+        heading: {
+            type: 'heading',
+            heading: 'Item Setting'|t('asset-indexes-extra'),
+            thin: true
+        },
+        convertTo: {
+            type: 'html',
+            heading: 'Craft Field/Column Type'|t('asset-indexes-extra'),
+            thin: true,
+        },
+        container: {
+            type: 'html',
+            heading: 'Craft Field/Column Container'|t('asset-indexes-extra'),
+            thin: false
+        },
+        field: {
+            type: 'html',
+            heading: 'Craft Field/Column Handle'|t('asset-indexes-extra'),
+            thin: false
+        }
+    }|filter,
+    rows: fieldRows,
+    staticRows: true,
+    errors: fieldErrors|unique
+}) }}
+
+{% do view.registerAssetBundle("vnali\\assetindexesextra\\assets\\MappingAsset") %}
