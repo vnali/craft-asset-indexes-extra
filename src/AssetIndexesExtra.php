@@ -37,7 +37,7 @@ class AssetIndexesExtra extends Plugin
      */
     public static AssetIndexesExtra $plugin;
 
-    public string $schemaVersion = '2.0.0-alpha.1';
+    public string $schemaVersion = '2.0.0-alpha.2';
     public bool $hasCpSettings = true;
     public bool $hasCpSection = true;
 

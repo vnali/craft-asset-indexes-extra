@@ -21,6 +21,7 @@ class Install extends Migration
      */
     public function safeUp()
     {
+        $this->deleteTables();
         $this->createTables();
         Craft::$app->db->schema->refresh();
         return true;
@@ -68,8 +69,8 @@ class Install extends Migration
                 'optionId' => $this->integer(),
                 'itemType' => $this->string(),
                 'volumeId' => $this->integer(),
-                'volumeHandle' => $this->text(),
-                'volumeName' => $this->text(),
+                'volumeHandle' => $this->string(),
+                'volumeName' => $this->string(),
                 'filename' => $this->string(),
                 'itemId' => $this->integer(),
                 'assetId' => $this->integer(),
@@ -78,7 +79,7 @@ class Install extends Migration
                 'settings' => $this->text(),
                 'result' => $this->text(),
                 'userId' => $this->integer(),
-                'username' => $this->text(),
+                'username' => $this->string(),
                 'dateCreated' => $this->dateTime()->notNull(),
             ]);
 
