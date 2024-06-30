@@ -2,7 +2,7 @@
   "name": "vnali/craft-asset-indexes-extra",
   "description": "Generate entries, products from assets and more",
   "type": "craft-plugin",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "license": "proprietary",
   "keywords": ["bulk-import"],
   "support": {
